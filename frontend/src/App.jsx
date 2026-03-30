@@ -21,12 +21,10 @@ const App = () => {
       <Navbar />
 
       <Routes>
-        {/* Public */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={!user ? <Login /> : <Home />} />
         <Route path="/register" element={!user ? <Register /> : <Home />} />
 
-        {/* User Dashboard */}
         <Route
           path="/dashboard"
           element={
@@ -36,16 +34,12 @@ const App = () => {
           }
         />
 
-        <Route
-          path="/movie/:id"
-          element={
+        <Route path="/movie/:id" element={
+          <ProtectedRoute>
             <MovieDetails />
-          }
-        />
+          </ProtectedRoute>
+        } />
 
-
-
-        {/* Admin Dashboard */}
         <Route
           path="/admin-dashboard"
           element={

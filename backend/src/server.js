@@ -7,6 +7,7 @@ import connectDB from "./config/ConnectDB.js";
 
 import authRoutes from "./routes/auth.routes.js";
 import movieRoutes from "./routes/movie.routes.js";
+import userRouters from "./routes/user.route.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -32,6 +33,7 @@ app.use("/uploads", express.static("uploads"));
 // Routes
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/movies", movieRoutes);
+app.use("/api/v1/user", userRouters);
 
 // Global error handler
 app.use((err, req, res, next) => {

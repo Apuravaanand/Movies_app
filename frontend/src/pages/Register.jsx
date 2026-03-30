@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { signup } from "../api/auth.api.js"; // Correct API import
+import { signup } from "../api/auth.api.js";
 import { Link, useNavigate } from "react-router-dom";
 
 const Register = () => {
@@ -19,6 +19,19 @@ const Register = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
+
+        // ✅ Simple validation
+        if (!form.name || !form.email || !form.password) {
+            alert("Name, email, and password are required");
+            setLoading(false);
+            return;
+        }
+        if (form.role === "admin" && !form.adminPassword) {
+            alert("Admin secret password is required");
+            setLoading(false);
+            return;
+        }
+
         try {
             const payload = {
                 name: form.name,
@@ -58,8 +71,10 @@ const Register = () => {
                     placeholder="Name"
                     value={form.name}
                     onChange={handleChange}
+                    autoFocus
                     className="w-full border border-gray-300 p-2 rounded"
                 />
+
                 <input
                     name="email"
                     type="email"
@@ -68,6 +83,7 @@ const Register = () => {
                     onChange={handleChange}
                     className="w-full border border-gray-300 p-2 rounded"
                 />
+
                 <input
                     name="password"
                     type="password"
@@ -76,6 +92,7 @@ const Register = () => {
                     onChange={handleChange}
                     className="w-full border border-gray-300 p-2 rounded"
                 />
+
                 <select
                     name="role"
                     value={form.role}
@@ -85,6 +102,7 @@ const Register = () => {
                     <option value="user">User</option>
                     <option value="admin">Admin</option>
                 </select>
+
                 {form.role === "admin" && (
                     <input
                         name="adminPassword"
@@ -95,6 +113,7 @@ const Register = () => {
                         className="w-full border border-gray-300 p-2 rounded"
                     />
                 )}
+
                 <button
                     type="submit"
                     disabled={loading}
@@ -102,6 +121,7 @@ const Register = () => {
                 >
                     {loading ? "Registering..." : "Register"}
                 </button>
+
                 <p className="text-sm text-center text-gray-600">
                     Already have an account?{" "}
                     <Link

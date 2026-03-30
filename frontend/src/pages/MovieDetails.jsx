@@ -1,28 +1,30 @@
-import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useState, useContext } from "react";
 import { getMovieById } from "../api/movie.api.js";
-import { getImageUrl } from "../api/index.js"; // ✅ use centralized helper
+import { toggleFavoriteMovie } from "../api/user.api.js";
+import { AuthContext } from "../context/AuthContext.jsx";
 
 const MovieDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { user, setUser } = useContext(AuthContext);
 
     const [movie, setMovie] = useState(null);
+    const [isFav, setIsFav] = useState(false);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
 
+    // ✅ Fetch Movie (SAFE)
     useEffect(() => {
         const fetchMovie = async () => {
             try {
-                // ✅ FIX: already returns res.data
-                const data = await getMovieById(id);
+                const res = await getMovieById(id);
 
-                if (!data?.data) throw new Error("Movie not found");
+                // 🔥 safer handling (prevents undefined crash)
+                const movieData = res?.data?.data || res?.data || null;
 
-                setMovie(data.data);
+                setMovie(movieData);
             } catch (err) {
-                console.error(err);
-                setError("Failed to load movie");
+                console.error("Error fetching movie:", err);
             } finally {
                 setLoading(false);
             }
@@ -31,85 +33,103 @@ const MovieDetails = () => {
         if (id) fetchMovie();
     }, [id]);
 
-    // ✅ FIX: centralized image handling
-    const imageUrl = getImageUrl(movie?.posterUrl);
+    // ✅ Check Favorite (SAFE)
+    useEffect(() => {
+        if (user?.favorites && movie?._id) {
+            setIsFav(
+                user.favorites.some(
+                    (favId) => favId.toString() === movie._id.toString()
+                )
+            );
+        }
+    }, [user, movie]);
 
-    // ✅ Loading UI
-    if (loading) {
-        return (
-            <div className="ml-64 p-6">
-                <h2 className="text-xl font-semibold">Loading...</h2>
-            </div>
-        );
-    }
+    // ✅ Toggle Favorite (SAFE)
+    const handleFav = async () => {
+        if (!movie?._id) return;
 
-    // ✅ Error UI
-    if (error) {
-        return (
-            <div className="ml-64 p-6">
-                <h2 className="text-xl text-red-500">{error}</h2>
-                <button
-                    onClick={() => navigate(-1)}
-                    className="mt-4 bg-gray-700 text-white px-4 py-2 rounded"
-                >
-                    Go Back
-                </button>
-            </div>
-        );
-    }
+        try {
+            const res = await toggleFavoriteMovie(movie._id);
+
+            const favs = res?.data?.favorites || [];
+
+            setIsFav(
+                favs.some(
+                    (favId) => favId.toString() === movie._id.toString()
+                )
+            );
+
+            setUser((prev) => ({
+                ...prev,
+                favorites: favs,
+            }));
+        } catch (err) {
+            console.error("Error updating favorite:", err);
+        }
+    };
+
+    // ✅ Poster Fix (SAFE)
+    const poster = movie?.posterUrl
+        ? movie.posterUrl.startsWith("http")
+            ? movie.posterUrl
+            : `http://localhost:5000${movie.posterUrl}`
+        : "/default-poster.jpg";
+
+    // ✅ UI STATES (IMPORTANT)
+    if (loading) return <p className="p-6">Loading...</p>;
+    if (!movie) return <p className="p-6 text-red-500">Movie not found</p>;
 
     return (
-        <div className="ml-64 p-6">
-            {/* Back Button */}
+        <div className="min-h-screen bg-gray-100 p-4 md:ml-64 md:p-6">
+            {/* 🔙 Back Button */}
             <button
                 onClick={() => navigate(-1)}
-                className="mb-4 bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-700"
+                className="mb-6 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition"
             >
                 ← Back
             </button>
 
-            <div className="flex flex-col lg:flex-row gap-6">
-                {/* Poster */}
-                <img
-                    src={imageUrl}
-                    alt={movie?.title || "Movie"}
-                    className="w-full max-w-xs h-auto object-cover rounded-lg shadow-lg"
-                    onError={(e) => {
-                        e.target.src = "/default-poster.jpg";
-                    }}
-                />
+            <div className="flex flex-col md:flex-row gap-8 bg-white p-6 rounded-2xl shadow-lg">
+                {/* 🎬 Poster */}
+                <div className="flex justify-center md:justify-start">
+                    <img
+                        src={poster}
+                        alt={movie?.title || "movie"}
+                        className="w-64 h-96 object-cover rounded-xl shadow-md"
+                        onError={(e) => (e.target.src = "/default-poster.jpg")}
+                    />
+                </div>
 
-                {/* Details */}
-                <div className="flex-1 space-y-3">
-                    <h1 className="text-3xl font-bold">
-                        {movie?.title || "Untitled"}
+                {/* 📄 Info */}
+                <div className="flex-1">
+                    <h1 className="text-3xl font-bold text-gray-800">
+                        {movie?.title || "No Title"}
                     </h1>
 
-                    <p className="text-gray-600">
-                        ⭐ {movie?.rating ?? 0}/10
+                    <p className="text-gray-500 mt-2">
+                        ⭐ {movie?.rating || 0}/10
                     </p>
 
-                    <p>
-                        <span className="font-semibold">Director:</span>{" "}
-                        {movie?.director || "N/A"}
+                    <p className="mt-4 text-gray-700">
+                        {movie?.description || "No description available."}
                     </p>
 
-                    <p>
-                        <span className="font-semibold">Genre:</span>{" "}
-                        {(movie?.genre || []).join(", ") || "N/A"}
-                    </p>
+                    {/* ❤️ Buttons */}
+                    <div className="mt-6 flex gap-4">
+                        <button
+                            onClick={handleFav}
+                            className={`px-4 py-2 rounded-lg ${isFav
+                                    ? "bg-red-100 text-red-600"
+                                    : "bg-gray-200 hover:bg-gray-300"
+                                }`}
+                        >
+                            {isFav ? "❤️ Favorited" : "🤍 Add to Favorites"}
+                        </button>
 
-                    <p>
-                        <span className="font-semibold">
-                            Release Year:
-                        </span>{" "}
-                        {movie?.releaseYear || "N/A"}
-                    </p>
-
-                    <p className="mt-4 text-gray-700 leading-relaxed">
-                        {movie?.description ||
-                            "No description available."}
-                    </p>
+                        <button className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                            ▶ Watch
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

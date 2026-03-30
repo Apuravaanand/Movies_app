@@ -2,8 +2,8 @@ import { useEffect, useState, useContext } from "react";
 import {
     getAllMovies,
     createMovie,
-    deleteMovie,
     updateMovie,
+    deleteMovie,
 } from "../api/movie.api.js";
 import { AuthContext } from "../context/AuthContext.jsx";
 import Navbar from "../components/Navbar.jsx";
@@ -33,9 +33,10 @@ const AdminDashboard = () => {
         const fetchMovies = async () => {
             try {
                 const res = await getAllMovies();
-                setMovies(res.data.data || []);
+                setMovies(res.data?.data || res.data || []);
             } catch (err) {
                 console.error("Fetch error:", err);
+                alert("Failed to fetch movies");
             } finally {
                 setLoading(false);
             }
@@ -47,12 +48,8 @@ const AdminDashboard = () => {
     // ================= HANDLE INPUT =================
     const handleChange = (e) => {
         const { name, value, files } = e.target;
-
-        if (files) {
-            setForm((prev) => ({ ...prev, [name]: files[0] }));
-        } else {
-            setForm((prev) => ({ ...prev, [name]: value }));
-        }
+        if (files) setForm((prev) => ({ ...prev, [name]: files[0] }));
+        else setForm((prev) => ({ ...prev, [name]: value }));
     };
 
     // ================= SUBMIT (CREATE + UPDATE) =================
@@ -69,42 +66,43 @@ const AdminDashboard = () => {
             payload.append("releaseDate", form.releaseDate);
             payload.append("rating", form.rating);
             payload.append("duration", form.duration);
+            payload.append(
+                "genre",
+                JSON.stringify(
+                    form.genre
+                        .split(",")
+                        .map((g) => g.trim())
+                        .filter(Boolean)
+                )
+            );
+            payload.append(
+                "cast",
+                JSON.stringify(
+                    form.cast
+                        .split(",")
+                        .map((c) => c.trim())
+                        .filter(Boolean)
+                )
+            );
 
-            (form.genre || "")
-                .split(",")
-                .map((g) => g.trim())
-                .filter((g) => g)
-                .forEach((g) => payload.append("genre", g));
-
-            (form.cast || "")
-                .split(",")
-                .map((c) => c.trim())
-                .filter((c) => c)
-                .forEach((c) => payload.append("cast", c));
-
-            if (form.poster) {
-                payload.append("poster", form.poster);
-            }
+            if (form.poster) payload.append("poster", form.poster);
 
             let res;
-
             if (editingMovie) {
                 // ✅ UPDATE
                 res = await updateMovie(editingMovie._id, payload);
+                const updatedMovie = res.data?.data || res.data;
 
                 setMovies((prev) =>
-                    prev.map((m) =>
-                        m._id === editingMovie._id ? res.data.data : m
-                    )
+                    prev.map((m) => (m._id === editingMovie._id ? updatedMovie : m))
                 );
-
                 alert("Movie updated ✅");
             } else {
                 // ✅ CREATE
                 res = await createMovie(payload);
+                const newMovie = res.data?.data || res.data;
 
-                setMovies((prev) => [res.data.data, ...prev]);
-
+                setMovies((prev) => [newMovie, ...prev]);
                 alert("Movie created ✅");
             }
 
@@ -135,8 +133,7 @@ const AdminDashboard = () => {
 
         try {
             const res = await deleteMovie(id);
-
-            if (res.data.success) {
+            if (res.data?.success || res.success) {
                 setMovies((prev) => prev.filter((m) => m._id !== id));
                 alert("Movie deleted ✅");
             }
@@ -149,7 +146,6 @@ const AdminDashboard = () => {
     // ================= EDIT =================
     const handleEdit = (movie) => {
         setEditingMovie(movie);
-
         setForm({
             title: movie.title || "",
             description: movie.description || "",
@@ -163,15 +159,22 @@ const AdminDashboard = () => {
         });
     };
 
+    if (!user) return null;
+
+    // ================= LOADING =================
+    if (loading)
+        return (
+            <div className="ml-64 p-6 text-gray-600 font-semibold">
+                Loading movies...
+            </div>
+        );
+
     // ================= UI =================
     return (
         <>
             <Navbar />
-
             <div className="ml-64 p-6 space-y-8 bg-gray-50 min-h-screen">
-                <h1 className="text-3xl font-bold text-green-700">
-                    Admin Dashboard
-                </h1>
+                <h1 className="text-3xl font-bold text-green-700">Admin Dashboard</h1>
 
                 {/* FORM */}
                 <form
@@ -285,9 +288,7 @@ const AdminDashboard = () => {
                             >
                                 {/* DELETE */}
                                 <button
-                                    onClick={() =>
-                                        handleDelete(movie._id)
-                                    }
+                                    onClick={() => handleDelete(movie._id)}
                                     className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded"
                                 >
                                     ✕
@@ -311,16 +312,10 @@ const AdminDashboard = () => {
                                     }
                                     alt={movie.title}
                                     className="w-full h-64 object-cover rounded-lg"
-                                    onError={(e) =>
-                                    (e.target.src =
-                                        "/default-poster.jpg")
-                                    }
+                                    onError={(e) => (e.target.src = "/default-poster.jpg")}
                                 />
 
-                                <h3 className="mt-2 font-semibold truncate">
-                                    {movie.title}
-                                </h3>
-
+                                <h3 className="mt-2 font-semibold truncate">{movie.title}</h3>
                                 <p className="text-sm text-gray-600">
                                     ⭐ {movie.rating || 0}/10
                                 </p>

@@ -15,24 +15,26 @@ const Login = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (!form.email || !form.password) {
+            alert("Email and password are required");
+            return;
+        }
+
         setLoading(true);
         try {
             const res = await apiLogin(form);
 
-            if (res.data.success) {
-                // Save user and token in context
+            if (res.data.success || res.data.token) {
                 login(res.data.user, res.data.token);
 
                 // Navigate based on role
-                if (res.data.user.role === "admin") {
-                     navigate("/admin-dashboard");
-                } else {
-                    navigate("/dashboard");
-                }
+                navigate(res.data.user.role === "admin" ? "/admin-dashboard" : "/dashboard");
             } else {
                 alert(res.data.message || "Login failed");
             }
         } catch (err) {
+            console.error(err);
             alert(err.response?.data?.message || "Login failed");
         } finally {
             setLoading(false);
@@ -55,8 +57,10 @@ const Login = () => {
                     placeholder="Email"
                     value={form.email}
                     onChange={handleChange}
+                    autoFocus
                     className="w-full border border-gray-300 p-2 rounded"
                 />
+
                 <input
                     name="password"
                     type="password"
@@ -76,7 +80,10 @@ const Login = () => {
 
                 <p className="text-sm text-center text-gray-600">
                     Don't have an account?{" "}
-                    <Link to="/register" className="text-green-600 font-medium hover:underline">
+                    <Link
+                        to="/register"
+                        className="text-green-600 font-medium hover:underline"
+                    >
                         Sign Up
                     </Link>
                 </p>
