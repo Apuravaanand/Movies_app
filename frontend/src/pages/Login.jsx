@@ -25,10 +25,11 @@ const Login = () => {
         try {
             const res = await apiLogin(form);
 
-            if (res.data.success || res.data.token) {
+            if (res.data.success && res.data.token) {
+                // Save user & token in AuthContext
                 login(res.data.user, res.data.token);
 
-                // Navigate based on role
+                // Navigate after login
                 navigate(res.data.user.role === "admin" ? "/admin-dashboard" : "/dashboard");
             } else {
                 alert(res.data.message || "Login failed");
@@ -47,9 +48,7 @@ const Login = () => {
                 onSubmit={handleSubmit}
                 className="bg-white p-6 rounded-xl w-96 shadow space-y-4"
             >
-                <h2 className="text-2xl font-bold text-center text-green-600">
-                    Login
-                </h2>
+                <h2 className="text-2xl font-bold text-center text-green-600">Login</h2>
 
                 <input
                     name="email"

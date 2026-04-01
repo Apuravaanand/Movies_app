@@ -1,9 +1,12 @@
-import { useState } from "react";
-import { signup } from "../api/auth.api.js";
+import { useState, useContext } from "react";
+import { signup as apiSignup } from "../api/auth.api.js";
+import { AuthContext } from "../context/AuthContext.jsx";
 import { Link, useNavigate } from "react-router-dom";
 
 const Register = () => {
     const navigate = useNavigate();
+    const { login } = useContext(AuthContext); // optional if you want auto-login
+
     const [form, setForm] = useState({
         name: "",
         email: "",
@@ -20,7 +23,7 @@ const Register = () => {
         e.preventDefault();
         setLoading(true);
 
-        // ✅ Simple validation
+        // Basic validation
         if (!form.name || !form.email || !form.password) {
             alert("Name, email, and password are required");
             setLoading(false);
@@ -41,11 +44,18 @@ const Register = () => {
             };
             if (form.role === "admin") payload.adminPassword = form.adminPassword;
 
-            const res = await signup(payload);
+            const res = await apiSignup(payload);
 
-            if (res.data.success) {
-                alert("Registered successfully!");
-                navigate("/login");
+            if (res.data.success && res.data.token) {
+                // Optional: auto-login after signup
+                login(res.data.user, res.data.token);
+
+                // Navigate based on role
+                navigate(res.data.user.role === "admin" ? "/admin-dashboard" : "/dashboard");
+
+                // If you prefer email verification flow, remove auto-login and navigate to login
+                // alert("Registered successfully! Please verify your email.");
+                // navigate("/login");
             } else {
                 alert(res.data.message || "Signup failed");
             }
