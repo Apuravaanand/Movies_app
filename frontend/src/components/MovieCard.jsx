@@ -8,7 +8,6 @@ const MovieCard = ({ movie }) => {
     const { user, setUser } = useContext(AuthContext);
     const [isFav, setIsFav] = useState(false);
 
-    // ✅ Sync favorite state
     useEffect(() => {
         if (!user?.favorites || !movie?._id) return;
 
@@ -17,9 +16,9 @@ const MovieCard = ({ movie }) => {
                 (id) => id.toString() === movie._id.toString()
             )
         );
-    }, [user?.favorites, movie?._id]); // ✅ FIXED dependency
+    }, [user?.favorites, movie?._id]);
 
-    // ✅ Toggle Favorite
+    // Toggle Favorite
     const handleFavorite = async () => {
         alert("fav btn");
         try {

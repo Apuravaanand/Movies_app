@@ -63,11 +63,10 @@ const movieSchema = new mongoose.Schema(
         },
     },
     {
-        timestamps: true, // ✅ auto handles createdAt & updatedAt
+        timestamps: true, 
     }
 );
 
-// ✅ Add text index for search
 movieSchema.index({ title: "text" });
 
 export default mongoose.model("Movie", movieSchema);

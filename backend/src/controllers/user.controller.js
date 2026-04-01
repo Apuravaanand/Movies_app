@@ -16,7 +16,7 @@ export const toggleFavorite = async (req, res) => {
     await user.save();
 
     res.json({
-        favorites: user.favorites, // ✅ IMPORTANT
+        favorites: user.favorites, 
     });
 };
 
