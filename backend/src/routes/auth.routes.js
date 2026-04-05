@@ -10,7 +10,6 @@ import { auth } from "../middlewares/auth.js";
 
 const authRoutes = express.Router();
 
-// ---------- AUTH ----------
 // Signup with email verification
 authRoutes.post("/signup", signup);
 
