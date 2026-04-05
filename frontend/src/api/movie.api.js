@@ -1,19 +1,19 @@
 import api from "./index.js";
 
-// ✅ GET ALL MOVIES
+// get all movies
 export const getAllMovies = async () => {
     const res = await api.get("/movies");
     return res.data; // return clean data
 };
 
-// ✅ GET SINGLE MOVIE
+// get movie by particular user id
 export const getMovieById = async (id) => {
     if (!id) throw new Error("Movie ID is required");
     const res = await api.get(`/movies/${id}`);
     return res.data;
 };
 
-// ✅ CREATE MOVIE (admin)
+// only admin can create
 export const createMovie = async (formData) => {
     const res = await api.post("/movies", formData, {
         headers: {
@@ -23,7 +23,6 @@ export const createMovie = async (formData) => {
     return res.data;
 };
 
-// ✅ UPDATE MOVIE (admin)
 export const updateMovie = async (id, formData) => {
     if (!id) throw new Error("Movie ID is required");
 
@@ -36,7 +35,6 @@ export const updateMovie = async (id, formData) => {
     return res.data;
 };
 
-// ✅ DELETE MOVIE (admin)
 export const deleteMovie = async (id) => {
     if (!id) throw new Error("Movie ID is required");
 
