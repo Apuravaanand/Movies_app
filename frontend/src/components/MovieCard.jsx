@@ -32,7 +32,7 @@ const MovieCard = ({ movie }) => {
                 )
             );
 
-            // ✅ Update context + persist
+            // Update context + persist
             const updatedUser = {
                 ...user,
                 favorites: updatedFavorites,
