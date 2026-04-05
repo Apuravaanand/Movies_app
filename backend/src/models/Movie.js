@@ -16,7 +16,7 @@ const movieSchema = new mongoose.Schema(
         genre: {
             type: [String],
             required: true,
-            index: true   // ✅ faster category filtering
+            index: true  
         },
 
         director: {
