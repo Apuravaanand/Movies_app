@@ -32,16 +32,12 @@ const MovieCard = ({ movie }) => {
             const res = await toggleFavoriteMovie(movie._id);
             const updatedFavorites = res.data.favorites;
 
-<<<<<<< HEAD
-=======
             setIsFav(
                 updatedFavorites.some(
                     (id) => id.toString() === movie._id.toString()
                 )
             );
 
-            // Update context + persist
->>>>>>> c12c53af621db9942b0ed7e1b87e8ab753aee859
             const updatedUser = {
                 ...user,
                 favorites: updatedFavorites,
@@ -49,6 +45,7 @@ const MovieCard = ({ movie }) => {
 
             setUser(updatedUser);
             localStorage.setItem("user", JSON.stringify(updatedUser));
+
         } catch (err) {
             console.error("Favorite error:", err);
         } finally {
@@ -56,7 +53,7 @@ const MovieCard = ({ movie }) => {
         }
     };
 
-    // CLEAN POSTER LOGIC (single source)
+    // CLEAN POSTER LOGIC
     const poster = movie.posterUrl
         ? movie.posterUrl.startsWith("http")
             ? movie.posterUrl
