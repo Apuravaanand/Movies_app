@@ -27,6 +27,7 @@ const movieSchema = new mongoose.Schema(
         genre: {
             type: [String],
             required: true,
+<<<<<<< HEAD
             set: (arr) =>
                 Array.isArray(arr)
                     ? arr.map((g) => g.trim())
@@ -38,6 +39,9 @@ const movieSchema = new mongoose.Schema(
                     arr.every((g) => GENRES.includes(g)),
                 message: "Invalid genre",
             },
+=======
+            index: true  
+>>>>>>> c12c53af621db9942b0ed7e1b87e8ab753aee859
         },
 
         director: {

@@ -32,6 +32,16 @@ const MovieCard = ({ movie }) => {
             const res = await toggleFavoriteMovie(movie._id);
             const updatedFavorites = res.data.favorites;
 
+<<<<<<< HEAD
+=======
+            setIsFav(
+                updatedFavorites.some(
+                    (id) => id.toString() === movie._id.toString()
+                )
+            );
+
+            // Update context + persist
+>>>>>>> c12c53af621db9942b0ed7e1b87e8ab753aee859
             const updatedUser = {
                 ...user,
                 favorites: updatedFavorites,
