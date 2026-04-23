@@ -1,5 +1,6 @@
 // models/User.js
 import mongoose from "mongoose";
+import * as crypto from "crypto";
 
 const userSchema = new mongoose.Schema(
     {
@@ -23,6 +24,18 @@ const userSchema = new mongoose.Schema(
     },
     { timestamps: true }
 );
+
+userSchema.methods.generateResetToken = function () {
+    // Generate a random token
+    const token = crypto.randomBytes(32).toString("hex");
+
+    // Set token and expiration (1 hour)
+    this.resetPasswordToken = token;
+    this.resetPasswordExpires = Date.now() + 3600000;
+
+    return token;
+};
+
 
 // Compare password method (optional, if controller handles hashing)
 userSchema.methods.comparePassword = async function (candidatePassword) {

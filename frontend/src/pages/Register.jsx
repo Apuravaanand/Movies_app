@@ -1,11 +1,9 @@
-import { useState, useContext } from "react";
+import { useState } from "react";
 import { signup as apiSignup } from "../api/auth.api.js";
-import { AuthContext } from "../context/AuthContext.jsx";
 import { Link, useNavigate } from "react-router-dom";
 
 const Register = () => {
     const navigate = useNavigate();
-    const { login } = useContext(AuthContext); // optional if you want auto-login
 
     const [form, setForm] = useState({
         name: "",
@@ -14,67 +12,93 @@ const Register = () => {
         role: "user",
         adminPassword: "",
     });
+
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
-    const handleChange = (e) =>
-        setForm({ ...form, [e.target.name]: e.target.value });
+    // Handle input change
+    const handleChange = (e) => {
+        setForm((prev) => ({
+            ...prev,
+            [e.target.name]: e.target.value,
+        }));
+        setError(""); // clear error on typing
+    };
 
+    // Submit form
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true);
 
-        // Basic validation
+        if (loading) return;
+
+        // Validation
         if (!form.name || !form.email || !form.password) {
-            alert("Name, email, and password are required");
-            setLoading(false);
-            return;
+            return setError("All fields are required");
         }
-        if (form.role === "admin" && !form.adminPassword) {
-            alert("Admin secret password is required");
-            setLoading(false);
-            return;
-        }
+
+        // if (
+        //     form.role === "admin" &&
+        //     form.adminPassword !== import.meta.env.ADMIN_SECRET
+        // ) {
+        //     return setError("Invalid admin secret password");
+        // }
 
         try {
+            setLoading(true);
+
             const payload = {
                 name: form.name,
                 email: form.email,
                 password: form.password,
                 role: form.role,
+                ...(form.role === "admin" && {
+                    adminPassword: form.adminPassword,
+                }),
             };
-            if (form.role === "admin") payload.adminPassword = form.adminPassword;
+
+            console.log("Sending signup request...");
 
             const res = await apiSignup(payload);
 
-            if (res.data.success && res.data.token) {
-                // Optional: auto-login after signup
-                login(res.data.user, res.data.token);
+            console.log("Response:", res);
 
-                // Navigate based on role
-                navigate(res.data.user.role === "admin" ? "/admin-dashboard" : "/dashboard");
+            if (res?.data?.success) {
+                alert("Registered successfully! Please verify your email.");
 
-                // If you prefer email verification flow, remove auto-login and navigate to login
-                // alert("Registered successfully! Please verify your email.");
-                // navigate("/login");
+                navigate(
+                    `/verify-email?email=${encodeURIComponent(form.email)}`
+                );
             } else {
-                alert(res.data.message || "Signup failed");
+                setError(res?.data?.message || "Signup failed");
             }
+
         } catch (err) {
-            alert(err.response?.data?.message || "Signup failed");
+            console.error("Signup error:", err);
+
+            setError(
+                err?.response?.data?.message ||
+                err.message ||
+                "Something went wrong"
+            );
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
             <form
                 onSubmit={handleSubmit}
-                className="bg-white p-6 rounded-xl w-96 shadow space-y-4"
+                className="bg-white p-6 rounded-xl w-full max-w-md shadow space-y-4"
             >
                 <h2 className="text-2xl font-bold text-center text-green-600">
                     Register
                 </h2>
+
+                {/* Error Message */}
+                {error && (
+                    <p className="text-red-500 text-sm text-center">{error}</p>
+                )}
 
                 <input
                     name="name"
@@ -134,11 +158,18 @@ const Register = () => {
 
                 <p className="text-sm text-center text-gray-600">
                     Already have an account?{" "}
-                    <Link
-                        to="/login"
-                        className="text-green-600 font-medium hover:underline"
-                    >
+                    <Link to="/login" className="text-green-600 hover:underline">
                         Sign In
+                    </Link>
+                </p>
+
+                <p className="text-sm text-center text-gray-600">
+                    Forgot Password?{" "}
+                    <Link
+                        to="/forgot-password"
+                        className="text-green-600 hover:underline"
+                    >
+                        Reset
                     </Link>
                 </p>
             </form>

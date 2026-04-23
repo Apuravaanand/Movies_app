@@ -3,10 +3,13 @@ import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext.jsx";
 
 const ProtectedRoute = ({ children, adminOnly = false }) => {
-    const { user } = useContext(AuthContext);
+    const { user, loading } = useContext(AuthContext);
 
-    if (!user) return <Navigate to="/login" replace />; // not logged in
-    if (adminOnly && user.role !== "admin") return <Navigate to="/" replace />; // not admin
+    if (loading) return null; // or spinner
+
+    if (!user) return <Navigate to="/login" replace />;
+    if (!user.isVerified) return <Navigate to="/verify-email" replace />; // redirect unverified users
+    if (adminOnly && user.role !== "admin") return <Navigate to="/" replace />;
 
     return children;
 };

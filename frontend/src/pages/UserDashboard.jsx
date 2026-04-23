@@ -1,31 +1,52 @@
+// src/pages/UserDashboard.jsx
 import { useEffect, useState, useContext } from "react";
 import { getMovieById } from "../api/movie.api.js";
 import { AuthContext } from "../context/AuthContext.jsx";
 import Navbar from "../components/Navbar.jsx";
 import MovieCard from "../components/MovieCard.jsx";
 import { Navigate } from "react-router-dom";
+import Loader from "../components/Loader.jsx";
 
 const UserDashboard = () => {
   const { user } = useContext(AuthContext);
+
+
+  const [open, setOpen] = useState(true);
+
   const [favoriteMovies, setFavoriteMovies] = useState([]);
-  const [loadingFav, setLoadingFav] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!user?.favorites?.length) {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    if (!user.favorites || user.favorites.length === 0) {
       setFavoriteMovies([]);
-      setLoadingFav(false);
+      setLoading(false);
       return;
     }
 
     const fetchFavorites = async () => {
       try {
-        const promises = user.favorites.map((id) => getMovieById(id));
+        const promises = user.favorites.map((id) =>
+          getMovieById(id).catch((err) => null)
+        );
+
         const results = await Promise.all(promises);
-        setFavoriteMovies(results.map((res) => res.data));
+
+        const validMovies = results
+          .filter((res) => res !== null)
+          .map((res) => res.data);
+
+        setFavoriteMovies(validMovies);
       } catch (err) {
-        console.error("Error fetching favorite movies:", err);
+        console.error(err);
+        setError("Failed to load favorite movies.");
       } finally {
-        setLoadingFav(false);
+        setLoading(false);
       }
     };
 
@@ -33,16 +54,39 @@ const UserDashboard = () => {
   }, [user]);
 
   if (!user) return <Navigate to="/login" replace />;
-  if (loadingFav) return <h1 className="ml-64 p-6 text-green-700 font-bold">Loading favorites...</h1>;
+
+  if (loading) {
+    return (
+      <>
+        <Navbar />
+        <div className="ml-64 p-6">
+          <h1 className="text-green-700 font-bold animate-pulse">
+            <Loader />
+            <Loader />
+          </h1>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
-      <Navbar />
-      <div className="ml-64 p-6 space-y-6">
-        <h1 className="text-2xl font-bold text-green-700">Welcome, {user?.name}</h1>
+      <Navbar open={open} setOpen={setOpen} />
+
+      {/* MAIN WRAPPER (ANIMATED SHIFT) */}
+      <div
+        className={`transition-all duration-300 min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6
+                ${open ? "ml-64" : "ml-0"}`}
+      >
+        <h1 className="text-2xl font-bold text-green-700">Welcome, {user.name}</h1>
 
         <h2 className="text-xl font-semibold mt-4">Your Favorites</h2>
-        {favoriteMovies.length === 0 ? (
+
+        {error && <p className="text-red-500">{error}</p>}
+
+        {error ? (
+          <p className="text-red-500">{error}</p>
+        ) : favoriteMovies.length === 0 ? (
           <p className="text-gray-500">No favorite movies yet.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">

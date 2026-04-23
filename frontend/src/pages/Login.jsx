@@ -26,16 +26,33 @@ const Login = () => {
             const res = await apiLogin(form);
 
             if (res.data.success && res.data.token) {
-                // Save user & token in AuthContext
-                login(res.data.user, res.data.token);
+                const user = res.data.user;
 
-                // Navigate after login
-                navigate(res.data.user.role === "admin" ? "/admin-dashboard" : "/dashboard");
+                // Normalize isVerified to a boolean
+                const isVerified =
+                    user.isVerified === true ||
+                    user.isVerified === "true" ||
+                    user.isVerified === 1;
+
+                if (!isVerified) {
+                    alert(
+                        "Your email is not verified yet. Please check your inbox and verify your email."
+                    );
+                    setLoading(false);
+                    return;
+                }
+
+                // Save user & token in AuthContext
+                login(user, res.data.token);
+
+                // Redirect based on role
+                if (user.role === "admin") navigate("/admin-dashboard");
+                else navigate("/dashboard");
             } else {
                 alert(res.data.message || "Login failed");
             }
         } catch (err) {
-            console.error(err);
+            console.error("Login error:", err);
             alert(err.response?.data?.message || "Login failed");
         } finally {
             setLoading(false);
@@ -43,12 +60,14 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
             <form
                 onSubmit={handleSubmit}
-                className="bg-white p-6 rounded-xl w-96 shadow space-y-4"
+                className="bg-white p-6 rounded-xl w-full max-w-md shadow space-y-4"
             >
-                <h2 className="text-2xl font-bold text-center text-green-600">Login</h2>
+                <h2 className="text-2xl font-bold text-center text-green-600">
+                    Login
+                </h2>
 
                 <input
                     name="email"

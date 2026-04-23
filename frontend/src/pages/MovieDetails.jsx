@@ -3,17 +3,20 @@ import { useEffect, useState, useContext } from "react";
 import { getMovieById } from "../api/movie.api.js";
 import { toggleFavoriteMovie } from "../api/user.api.js";
 import { AuthContext } from "../context/AuthContext.jsx";
+import Navbar from "../components/Navbar.jsx";
 
 const MovieDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { user, setUser } = useContext(AuthContext);
+    const [open, setOpen] = useState(true);
+
 
     const [movie, setMovie] = useState(null);
     const [isFav, setIsFav] = useState(false);
     const [loading, setLoading] = useState(true);
 
-    // ✅ Fetch Movie (SAFE)
+    // Fetch Movie (SAFE)
     useEffect(() => {
         const fetchMovie = async () => {
             try {
@@ -33,7 +36,7 @@ const MovieDetails = () => {
         if (id) fetchMovie();
     }, [id]);
 
-    // ✅ Check Favorite (SAFE)
+    // Check Favorite (SAFE)
     useEffect(() => {
         if (user?.favorites && movie?._id) {
             setIsFav(
@@ -44,7 +47,7 @@ const MovieDetails = () => {
         }
     }, [user, movie]);
 
-    // ✅ Toggle Favorite (SAFE)
+    // Toggle Favorite 
     const handleFav = async () => {
         if (!movie?._id) return;
 
@@ -68,19 +71,22 @@ const MovieDetails = () => {
         }
     };
 
-    // ✅ Poster Fix (SAFE)
     const poster = movie?.posterUrl
         ? movie.posterUrl.startsWith("http")
             ? movie.posterUrl
             : `http://localhost:5000${movie.posterUrl}`
         : "/default-poster.jpg";
 
-    // ✅ UI STATES (IMPORTANT)
     if (loading) return <p className="p-6">Loading...</p>;
     if (!movie) return <p className="p-6 text-red-500">Movie not found</p>;
 
-    return (
-        <div className="min-h-screen bg-gray-100 p-4 md:ml-64 md:p-6">
+    return (<>
+        <Navbar open={open} setOpen={setOpen} />
+
+        <div
+            className={`transition-all duration-300 p-6 min-h-screen ${open ? "ml-64" : "ml-10"
+                }`}
+        >
             {/* 🔙 Back Button */}
             <button
                 onClick={() => navigate(-1)}
@@ -90,7 +96,6 @@ const MovieDetails = () => {
             </button>
 
             <div className="flex flex-col md:flex-row gap-8 bg-white p-6 rounded-2xl shadow-lg">
-                {/* 🎬 Poster */}
                 <div className="flex justify-center md:justify-start">
                     <img
                         src={poster}
@@ -100,7 +105,6 @@ const MovieDetails = () => {
                     />
                 </div>
 
-                {/* 📄 Info */}
                 <div className="flex-1">
                     <h1 className="text-3xl font-bold text-gray-800">
                         {movie?.title || "No Title"}
@@ -114,13 +118,12 @@ const MovieDetails = () => {
                         {movie?.description || "No description available."}
                     </p>
 
-                    {/* ❤️ Buttons */}
                     <div className="mt-6 flex gap-4">
                         <button
                             onClick={handleFav}
                             className={`px-4 py-2 rounded-lg ${isFav
-                                    ? "bg-red-100 text-red-600"
-                                    : "bg-gray-200 hover:bg-gray-300"
+                                ? "bg-red-100 text-red-600"
+                                : "bg-gray-200 hover:bg-gray-300"
                                 }`}
                         >
                             {isFav ? "❤️ Favorited" : "🤍 Add to Favorites"}
@@ -133,6 +136,7 @@ const MovieDetails = () => {
                 </div>
             </div>
         </div>
+    </>
     );
 };
 

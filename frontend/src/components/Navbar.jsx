@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext.jsx";
 
-const Navbar = () => {
+const Navbar = ({ open, setOpen }) => {
     const { user, logout } = useContext(AuthContext);
     const navigate = useNavigate();
 
@@ -11,83 +11,105 @@ const Navbar = () => {
         navigate("/login");
     };
 
-    // ✅ Dynamic dashboard route
     const dashboardRoute =
         user?.role === "admin" ? "/admin-dashboard" : "/dashboard";
 
     return (
-        <nav className="fixed top-0 left-0 h-screen w-64 bg-white border-r border-gray-200 flex flex-col justify-between">
-            <div className="px-6 py-4 flex flex-col h-full">
-
-                {/* Logo */}
-                <Link
-                    to="/"
-                    className="text-2xl font-bold text-green-600 tracking-wide mb-8"
+        <>
+            {/* OPEN BUTTON */}
+            {!open && (
+                <button
+                    onClick={() => setOpen(true)}
+                    className="fixed top-4 left-4 z-50 bg-white shadow-md px-3 py-2 rounded-md hover:bg-gray-100"
                 >
-                    Movie<span className="text-gray-800">Hub</span>
-                </Link>
+                    ☰
+                </button>
+            )}
 
-                {/* Navigation */}
-                <div className="flex flex-col gap-6 flex-1">
-                    <Link
-                        to="/"
-                        className="text-gray-600 hover:text-green-600 font-medium transition"
-                    >
-                        Home
-                    </Link>
+            {/* SIDEBAR */}
+            <nav
+                className={`fixed top-0 left-0 h-screen w-64 bg-white border-r flex flex-col z-40 transform transition-transform duration-300 
+                ${open ? "translate-x-0" : "-translate-x-full"}`}
+            >
+                <div className="px-6 py-5 flex flex-col h-full">
 
-                    {user && (
+                    {/* TOP */}
+                    <div className="flex items-center justify-between mb-8">
                         <Link
-                            to={dashboardRoute}
-                            className="text-gray-600 hover:text-green-600 font-medium transition"
+                            to="/"
+                            className="text-2xl font-bold text-green-600"
                         >
-                            My Dashboard
+                            Movie<span className="text-gray-800">Hub</span>
                         </Link>
-                    )}
-                </div>
 
-                {/* Bottom Section */}
-                <div className="flex flex-col gap-3 mt-6">
-                    {!user ? (
-                        <>
-                            <Link
-                                to="/login"
-                                className="bg-green-600 text-white px-4 py-2 rounded-lg text-center hover:bg-green-700 transition font-medium"
-                            >
-                                Login
-                            </Link>
-                            <Link
-                                to="/register"
-                                className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-center hover:bg-gray-200 transition font-medium"
-                            >
-                                Register
-                            </Link>
-                        </>
-                    ) : (
-                        <>
-                            <span className="text-gray-700 font-medium">
-                                {user.name}
-                            </span>
+                        <button
+                            onClick={() => setOpen(false)}
+                            className="text-gray-500 hover:text-red-500"
+                        >
+                            ✖
+                        </button>
+                    </div>
 
-                            {user.role === "admin" && (
-                                <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-md w-fit">
-                                    Admin
+                    {/* LINKS */}
+                    <div className="flex flex-col gap-4 flex-1 text-sm">
+                        <Link
+                            to="/"
+                            className="text-gray-600 hover:text-green-600"
+                        >
+                            Home
+                        </Link>
+
+                        {user && (
+                            <Link
+                                to={dashboardRoute}
+                                className="text-gray-600 hover:text-green-600"
+                            >
+                                Dashboard
+                            </Link>
+                        )}
+                    </div>
+
+                    {/* USER SECTION */}
+                    <div className="flex flex-col gap-3 text-sm border-t pt-4">
+                        {!user ? (
+                            <>
+                                <Link
+                                    to="/login"
+                                    className="bg-green-600 text-white px-4 py-2 rounded text-center"
+                                >
+                                    Login
+                                </Link>
+                                <Link
+                                    to="/register"
+                                    className="bg-gray-100 px-4 py-2 rounded text-center"
+                                >
+                                    Register
+                                </Link>
+                            </>
+                        ) : (
+                            <>
+                                <span className="font-medium">
+                                    {user.name}
                                 </span>
-                            )}
 
-                            <button
-                                onClick={handleLogout}
-                                className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition font-medium text-left"
-                            >
-                                Logout
-                            </button>
-                        </>
-                    )}
+                                {user.role === "admin" && (
+                                    <span className="text-xs bg-green-100 px-2 py-1 rounded w-fit">
+                                        Admin
+                                    </span>
+                                )}
+
+                                <button
+                                    onClick={handleLogout}
+                                    className="bg-gray-100 px-4 py-2 rounded text-left hover:bg-gray-200"
+                                >
+                                    Logout
+                                </button>
+                            </>
+                        )}
+                    </div>
                 </div>
-            </div>
-        </nav>
-
-
+            </nav>
+        </>
     );
 };
 

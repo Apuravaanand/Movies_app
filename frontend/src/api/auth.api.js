@@ -1,4 +1,4 @@
-import api from "./axios.js"; // your axios instance
+import api from "./index.js";
 
 // Login user
 export const login = (payload) => api.post("/auth/login", payload);
@@ -10,7 +10,12 @@ export const signup = (payload) => api.post("/auth/signup", payload);
 export const verifyEmail = (token) => api.get(`/auth/verify-email?token=${token}`);
 
 // Request password reset
-export const requestPasswordReset = (email) => api.post("/auth/request-password-reset", { email });
+export const requestPasswordReset = (email) => {
+    if (!email || typeof email !== "string") {
+        throw new Error("Email must be a string");
+    }
+    return api.post("/auth/request-password-reset", { email: email.toLowerCase().trim() });
+};
 
 // Reset password
 export const resetPassword = (token, newPassword) =>

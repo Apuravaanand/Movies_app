@@ -10,21 +10,29 @@ import AdminDashboard from "./pages/AdminDashboard";
 import NoPage from "./pages/NoPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthContext } from "./context/AuthContext.jsx";
-import "./index.css";
 import MovieDetails from "./pages/MovieDetails.jsx";
+// New auth pages
+import VerifyEmail from "./pages/VerifyEmail.jsx";
+import ForgotPassword from "./pages/ForgotPassword.jsx";
+import ResetPassword from "./pages/ResetPassword.jsx";
+
+import "./index.css";
 
 const App = () => {
   const { user } = useContext(AuthContext);
 
   return (
     <Router>
-      <Navbar />
-
       <Routes>
+        {/* Public routes */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={!user ? <Login /> : <Home />} />
         <Route path="/register" element={!user ? <Register /> : <Home />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
+        {/* Protected routes */}
         <Route
           path="/dashboard"
           element={
@@ -34,11 +42,14 @@ const App = () => {
           }
         />
 
-        <Route path="/movie/:id" element={
-          <ProtectedRoute>
-            <MovieDetails />
-          </ProtectedRoute>
-        } />
+        <Route
+          path="/movie/:id"
+          element={
+            <ProtectedRoute>
+              <MovieDetails />
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path="/admin-dashboard"
@@ -49,6 +60,7 @@ const App = () => {
           }
         />
 
+        {/* Fallback route */}
         <Route path="*" element={<NoPage />} />
       </Routes>
     </Router>

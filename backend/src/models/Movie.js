@@ -1,72 +1,101 @@
 import mongoose from "mongoose";
 
+const GENRES = [
+    "Action",
+    "Drama",
+    "Comedy",
+    "Sci-Fi",
+    "Adventure",
+    "Crime",
+    "Horror",
+];
+
 const movieSchema = new mongoose.Schema(
     {
         title: {
             type: String,
             required: true,
-            trim: true
+            trim: true,
         },
 
         description: {
             type: String,
-            default: ""
+            default: "",
+            trim: true,
         },
 
         genre: {
             type: [String],
             required: true,
-            index: true   // ✅ faster category filtering
+            set: (arr) =>
+                Array.isArray(arr)
+                    ? arr.map((g) => g.trim())
+                    : [],
+            validate: {
+                validator: (arr) =>
+                    Array.isArray(arr) &&
+                    arr.length > 0 &&
+                    arr.every((g) => GENRES.includes(g)),
+                message: "Invalid genre",
+            },
         },
 
         director: {
             type: String,
-            default: ""
+            default: "",
+            trim: true,
         },
 
         cast: {
             type: [String],
-            default: []
+            default: [],
+            set: (arr) =>
+                Array.isArray(arr)
+                    ? arr.map((c) => c.trim())
+                    : [],
         },
 
         releaseDate: {
             type: Date,
-            required: true
+            required: true,
         },
 
         rating: {
             type: Number,
             min: 0,
             max: 10,
-            default: 0
+            default: 0,
         },
 
         posterUrl: {
             type: String,
-            default: ""
+            default: "",
         },
 
         duration: {
             type: Number,
-            default: 0
+            min: 1,
+            default: 90,
         },
 
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: true
+            required: true,
         },
 
         isActive: {
             type: Boolean,
-            default: true
+            default: true,
         },
     },
     {
-        timestamps: true, 
+        timestamps: true,
     }
 );
 
+// Indexes
 movieSchema.index({ title: "text" });
+movieSchema.index({ genre: 1, rating: -1 });
 
 export default mongoose.model("Movie", movieSchema);
